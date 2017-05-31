@@ -7,7 +7,7 @@ var https = require('https'),
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
-    homebridge.registerAccessory('homebridge-tado', 'TADO', TadoAccessory);
+    homebridge.registerAccessory('homebridge-tadoheating', 'TADOHEAT', TadoAccessory);
 }
 
 
@@ -35,7 +35,7 @@ TadoAccessory.prototype.getServices = function() {
 
     thermostatService.getCharacteristic(Characteristic.TargetTemperature)
         .setProps({
-            maxValue: 30,
+            maxValue: 25,
             minValue: 5,
             minStep: 1
         })
@@ -61,7 +61,7 @@ TadoAccessory.prototype.getServices = function() {
 
     thermostatService.getCharacteristic(Characteristic.TargetTemperature)
         .setProps({
-            maxValue: 30,
+            maxValue: 25,
             minValue: 5,
             minStep: 1
         })
@@ -83,7 +83,7 @@ TadoAccessory.prototype.getServices = function() {
 
     thermostatService.getCharacteristic(Characteristic.CoolingThresholdTemperature)
         .setProps({
-            maxValue: 30,
+            maxValue: 25,
             minValue: 18,
             minStep: 1
         });
@@ -213,11 +213,15 @@ TadoAccessory.prototype.getTargetHeatingCoolingState = function(callback) {
         //the whole response has been recieved, so we just print it out here
         response.on('end', function() {
             var obj = JSON.parse(str);
+            accessory.log(obj);
             accessory.log("Target state is " + obj.setting.power);
+            accessory.log("Target overlay is " + obj.overlay);
             if (JSON.stringify(obj.setting.power).match("OFF")) {
                 callback(null, Characteristic.TargetHeatingCoolingState.OFF);
-            } else {
-                callback(null, Characteristic.TargetHeatingCoolingState.HEAT);
+            } else if (JSON.stringify(obj.overlay).match("MANUAL")) {
+		callback(null, Characteristic.TargetHeatingCoolingState.HEAT);
+	    } else {
+                callback(null, Characteristic.TargetHeatingCoolingState.AUTO);
             }
         });
     };
